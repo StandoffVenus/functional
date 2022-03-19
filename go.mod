@@ -1,4 +1,4 @@
-module github.com/standoffvenus/functional
+module github.com/standoffvenus/functional/v2
 
 go 1.18
 
