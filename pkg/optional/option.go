@@ -2,6 +2,8 @@
 // optional values.
 package optional
 
+import "fmt"
+
 // Some constructs a new option with the provided
 // value, representing the Some invariant.
 func Some[T any](t T) Option[T] {
@@ -42,9 +44,20 @@ func (o Option[T]) Get() T {
 // Expect is the same as Get, expect it
 // panics if the option is None.
 func (o Option[T]) Expect() T {
-	if !o.some {
+	if !o.IsSome() {
 		panic("optional: Expect() called on None")
 	}
 
 	return o.value
+}
+
+// String will return the option's value
+// formatted using fmt.Sprintf, or "None"
+// if the option has no value.
+func (o Option[T]) String() string {
+	if o.IsSome() {
+		return fmt.Sprintf("%+v", o.Expect())
+	}
+
+	return fmt.Sprintf("None")
 }

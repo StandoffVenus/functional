@@ -1,6 +1,7 @@
 package optional_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/standoffvenus/functional/v2/pkg/optional"
@@ -22,6 +23,17 @@ func TestNone(t *testing.T) {
 	assert.Panics(t, func() { v.Expect() })
 }
 
-func TestDefaultOptionIsNone(t *testing.T) {
+func TestOptionZeroIsNone(t *testing.T) {
 	assert.False(t, optional.Option[int]{}.IsSome())
+}
+
+func TestOptionStringWithNoValue(t *testing.T) {
+	v := optional.None[int]()
+	assert.Equal(t, "None", v.String())
+}
+
+func TestOptionStringWithValue(t *testing.T) {
+	const Value = 42
+	v := optional.Some(Value)
+	assert.Equal(t, strconv.FormatInt(Value, 10), v.String())
 }

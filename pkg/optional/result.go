@@ -49,3 +49,13 @@ func (r Result[T]) Expect() T {
 
 	return r.opt.value
 }
+
+// String will return the result's value formatted using fmt.Sprintf,
+// or the error string if the result is erroneous.
+func (r Result[T]) String() string {
+	if r.Ok() {
+		return r.opt.String()
+	}
+
+	return r.err.Error()
+}
