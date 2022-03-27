@@ -122,11 +122,10 @@ func (s *Slice[T]) Next() optional.Option[T] {
 	return optional.None[T]()
 }
 
-// Copy will create a new slice iterator that points to the
-// same underlying memory, but the new slice may be shorter.
-//
-// In other words, Copy creates a shallow copy of the existing
-// iterator.
+// Copy will create a new slice iterator from the existing
+// iterator. The copied iterator will start from the point
+// in the slice that the existing iterator is currently
+// pointing to.
 func (s *Slice[T]) Copy() Iterator[T] { return &Slice[T]{Values: s.Values[s.index:]} }
 
 // Next returns the result of waiting for the next value from the channel.
