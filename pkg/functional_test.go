@@ -64,6 +64,37 @@ func TestCollectToChanNoDeadlock(t *testing.T) {
 	assert.Equal(t, Value, <-collected)
 }
 
+func TestEqualDifferentLength(t *testing.T) {
+	a := &iterator.Slice[int]{Values: []int{1}}
+	b := &iterator.Slice[int]{Values: []int{1, 2}}
+
+	assert.False(t, functional.Equal[int](a, b))
+}
+
+func TestEqualDifferentLengthAfterCollection(t *testing.T) {
+	aChan, bChan := iterator.Send(1), iterator.Send(1, 2)
+	close(aChan)
+	close(bChan)
+	a := iterator.Chan[int](aChan)
+	b := iterator.Chan[int](bChan)
+
+	assert.False(t, functional.Equal[int](a, b))
+}
+
+func TestEqualDifferentValues(t *testing.T) {
+	a := &iterator.Slice[int]{Values: []int{1, 2}}
+	b := &iterator.Slice[int]{Values: []int{2, 1}}
+
+	assert.False(t, functional.Equal[int](a, b))
+}
+
+func TestEqual(t *testing.T) {
+	a := &iterator.Slice[int]{Values: []int{2, 1}}
+	b := &iterator.Slice[int]{Values: []int{2, 1}}
+
+	assert.True(t, functional.Equal[int](a, b))
+}
+
 func TestFilter(t *testing.T) {
 	ints := []int{-1, 0, 1}
 	iter := &iterator.Slice[int]{Values: ints}

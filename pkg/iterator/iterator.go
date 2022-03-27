@@ -14,6 +14,18 @@ type Iterator[T any] interface {
 	Next() optional.Option[T]
 }
 
+// Copyable represents an iterator that can be copied.
+type Copyable[T any] interface {
+	// Copy will copy the iterator's values into the
+	// return iterator. Copying an exhasted iterator
+	// will yield an exhausted iterator.
+	Copy() Iterator[T]
+}
+
+type Comparable[T any] interface {
+	Equals(Iterator[T]) bool
+}
+
 // BlockingIterator represents an iterator that may
 // block indefinitely on its Next().
 type BlockingIterator[T any] interface {
@@ -113,6 +125,13 @@ func (s *Slice[T]) Next() optional.Option[T] {
 
 	return optional.None[T]()
 }
+
+// Copy will create a new slice iterator that points to the
+// same underlying memory, but the new slice may be shorter.
+//
+// In other words, Copy creates a shallow copy of the existing
+// iterator.
+func (s *Slice[T]) Copy() Iterator[T] { return &Slice[T]{Values: s.Values[s.index:]} }
 
 // Next returns the result of waiting for the next value from the channel.
 // If the channel is closed, None is returned.
