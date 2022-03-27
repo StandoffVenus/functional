@@ -22,10 +22,6 @@ type Copyable[T any] interface {
 	Copy() Iterator[T]
 }
 
-type Comparable[T any] interface {
-	Equals(Iterator[T]) bool
-}
-
 // BlockingIterator represents an iterator that may
 // block indefinitely on its Next().
 type BlockingIterator[T any] interface {
