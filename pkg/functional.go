@@ -55,6 +55,30 @@ func CollectToChan[T any](iter iterator.Iterator[T]) <-chan T {
 	return ch
 }
 
+// Equal will check if two iterators equal by collecting their
+// values and comparing the resulting slices. If the iterator's
+// are different sizes, false is returned.
+func Equal[T comparable](a, b iterator.Iterator[T]) bool {
+	// Preliminary check on length to avoid collecting
+	// both iterators if possible
+	if getSizeHint(a) != getSizeHint(b) {
+		return false
+	}
+
+	aValues, bValues := Collect(a), Collect(b)
+	if len(aValues) != len(bValues) {
+		return false
+	}
+
+	for idx := 0; idx < len(aValues); idx++ {
+		if aValues[idx] != bValues[idx] {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Filter will return an iterator with every value "x" in
 // the given iterator such that fn(x) holds true.
 func Filter[T any](iter iterator.Iterator[T], fn func(T) bool) iterator.Iterator[T] {

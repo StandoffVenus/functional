@@ -29,6 +29,20 @@ func TestSliceNext(t *testing.T) {
 	AssertNextIsNone[int](t, iter)
 }
 
+func TestSliceCopy(t *testing.T) {
+	iter := &iterator.Slice[int]{
+		Values: Values,
+	}
+
+	assert.Equal(t, Values[0], iter.Next().Expect())
+
+	copyIter := iter.Copy()
+	AssertIteratorMatches[int](t, iter, Values[1:])
+	AssertIteratorMatches(t, copyIter, Values[1:])
+	AssertNextIsNone[int](t, iter)
+	AssertNextIsNone(t, copyIter)
+}
+
 func TestSliceWaitForNext(t *testing.T) {
 	ctx := context.Background()
 	iter := &iterator.Slice[int]{
