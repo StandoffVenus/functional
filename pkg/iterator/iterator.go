@@ -52,8 +52,9 @@ type Slice[T any] struct {
 }
 
 // Chan represents an iterator on a generic channel.
-// A channel iterator will block forever when Next
-// is called.
+// Closing the underlying channel signifies an
+// exhausted generator. A nil channel iterator will
+// block forever when Next is called.
 type Chan[T any] <-chan T
 
 // Func represents an iterator on a generic function
@@ -70,14 +71,32 @@ var _ BlockingIterator[int] = Chan[int](nil)
 
 var _ Enumerable[int] = new(Slice[int])
 
+// Deprecated: Prefer SendTo.
+//
 // Send will create a buffered channel, send all the provided
 // values on it, then return the channel to the caller. Useful
 // when a channel iterator is needed from a collection of values.
+//
+// The returned channel will not be closed. The channel doesn't
+// need to be closed for garbage collection purposes, but using
+// this channel for a generator (without closing it) can to lead
+// to a future deadlock since Chan expects that the channel it
+// wraps will close.
 func Send[T any](values ...T) chan T {
 	ch := make(chan T, len(values))
 	for _, v := range values {
 		ch <- v
 	}
+
+	return ch
+}
+
+// SendTo will create a buffered channel, send all the provided
+// values on it, before closing and returning the channel. SendTo
+// is useful for creating Chan generators.
+func SendTo[T any](values ...T) <-chan T {
+	ch := Send(values...)
+	close(ch)
 
 	return ch
 }
