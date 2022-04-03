@@ -53,6 +53,16 @@ func TestSliceWaitForNext(t *testing.T) {
 	AssertWaitForNextIsNone[int](t, ctx, iter)
 }
 
+// TestSendTo asserts that SendTo will return a closed
+// channel, ready for use as iterator.Chan.
+func TestSendTo(t *testing.T) {
+	ch := iterator.SendTo(Values...)
+	iter := iterator.Chan[int](ch)
+
+	AssertIteratorMatches[int](t, iter, Values)
+	AssertNextIsNone[int](t, iter)
+}
+
 func TestChanNext(t *testing.T) {
 	ch := iterator.Send(Values...)
 	close(ch)
