@@ -1,6 +1,7 @@
 package functional_test
 
 import (
+	"sort"
 	"testing"
 
 	functional "github.com/standoffvenus/functional/v2/pkg"
@@ -10,6 +11,8 @@ import (
 )
 
 func GreaterThan0(x int) bool { return x > 0 }
+
+type Int int
 
 func TestAllWithAllTrue(t *testing.T) {
 	iter := Iterator(1, 2, 3)
@@ -181,6 +184,36 @@ func TestReduceToDifferentType(t *testing.T) {
 	assert.Equal(t, expected, reduced)
 }
 
+func TestSort(t *testing.T) {
+	testSort := func(stable bool) func(t *testing.T) {
+		return func(t *testing.T) {
+			ints := []Int{9, 102, 41, 14, 0}
+			sortedInts := SortCopy(ints, stable)
+
+			iter := &iterator.Slice[Int]{Values: ints}
+			sorted := functional.Sort[Int](iter, stable)
+
+			AssertIteratorEqual(t, sortedInts, sorted)
+		}
+	}
+
+	t.Run("Unstable", testSort(false))
+	t.Run("Stable", testSort(true))
+
+	// If code coverage is 100%, we know that this is
+	// invoking the quick sort check in Sort
+	t.Run("Already Sorted", func(t *testing.T) {
+		ints := []Int{0, 1, 2}
+		iter := &iterator.Slice[Int]{Values: ints}
+		sorted := functional.Sort[Int](iter, false)
+		_ = functional.Sort(sorted, false)
+	})
+}
+
+func TestSortStable(t *testing.T) {
+
+}
+
 func AssertIteratorEqual[T comparable](t *testing.T, expected []T, iter iterator.Iterator[T]) bool {
 	for idx, v := range expected {
 		if v != iter.Next().Expect() {
@@ -203,4 +236,23 @@ func AssertEqualChan[T any](t *testing.T, expected []T, ch <-chan T) bool {
 
 func Iterator[T any](values ...T) iterator.Iterator[T] {
 	return &iterator.Slice[T]{Values: values}
+}
+
+func SortCopy[T functional.Comparable](arr []T, stable bool) []T {
+	cpy := append(make([]T, 0, len(arr)), arr...)
+	less := func(i, j int) bool { return cpy[i].Less(cpy[j]) }
+
+	var sortFn func(interface{}, func(int, int) bool)
+	if stable {
+		sortFn = sort.SliceStable
+	} else {
+		sortFn = sort.Slice
+	}
+
+	sortFn(cpy, less)
+	return cpy
+}
+
+func (me Int) Less(other functional.Comparable) bool {
+	return me < other.(Int)
 }
