@@ -1,10 +1,34 @@
 package functional
 
-import "github.com/standoffvenus/functional/v2/pkg/iterator"
+import (
+	"sort"
+
+	"github.com/standoffvenus/functional/v2/pkg/iterator"
+)
 
 // Break is a function that should be called when the caller
 // wishes to break from a loop.
 type Break = func()
+
+// Comparable represents a type that can be compared to another
+// instance of itself.
+type Comparable interface {
+	// Less should return true if the argument is considered
+	// "greater than" the instance, i.e.
+	//  var a, b Comparable
+	//  a.Less(b) // == a < b
+	Less(Comparable) bool
+}
+
+type (
+	// comparables is used implement sort.Interface on a collection
+	// of generic T.
+	comparables[T Comparable] []T
+
+	// sorted is used to represent a sorted iterator. It is returned
+	// from Sort to quickly check if an iterator is sorted.
+	sorted[T any] struct{ iterator.Iterator[T] }
+)
 
 // All will return whether the provided function holds true over
 // all values in the iterator. If the iterator is empty, All will
@@ -141,6 +165,32 @@ func Reduce[From, To any](iter iterator.Iterator[From], fn func(accum To, cur Fr
 	return accumulator
 }
 
+// Sort will sort the provided iterator if it is not already sorted.
+// If stable is set to true, the iterator will be sorted via sort.Stable.
+// Otherwise, sort.Sort will be used.
+//
+// Sort's algorithm is as follows:
+//  - If iter is the result of calling Sort, return iter (already sorted)
+//  - Otherwise, collect all values from the provided iterator into a slice
+//  - Check if the collected slice is sorted via sort.IsSorted
+//  - If unsorted, sort the slice
+func Sort[T Comparable](iter iterator.Iterator[T], stable bool) iterator.Iterator[T] {
+	if _, ok := iter.(sorted[T]); ok {
+		return iter
+	}
+
+	values := comparables[T](Collect(iter))
+	if !sort.IsSorted(values) {
+		if stable {
+			sort.Stable(values)
+		} else {
+			sort.Sort(values)
+		}
+	}
+
+	return sorted[T]{&iterator.Slice[T]{Values: []T(values)}}
+}
+
 // allocate will allocate a slice with some backing memory (not
 // zeroed) equal to the size of the provided iterator's count
 // if the iterator implements Enumerable.
@@ -159,4 +209,18 @@ func getSizeHint[T any](iter iterator.Iterator[T]) int {
 	}
 
 	return defaultSize
+}
+
+func (array comparables[T]) Len() int {
+	return len(array)
+}
+
+func (array comparables[T]) Less(i, j int) bool {
+	return array[i].Less(array[j])
+}
+
+func (array comparables[T]) Swap(i, j int) {
+	tmp := array[i]
+	array[i] = array[j]
+	array[j] = tmp
 }

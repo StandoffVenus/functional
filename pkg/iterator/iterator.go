@@ -22,6 +22,14 @@ type Copyable[T any] interface {
 	Copy() Iterator[T]
 }
 
+// Enumerable represents an iterator with a size.
+type Enumerable[T any] interface {
+	Iterator[T]
+
+	// Count returns the size of the iterator.
+	Count() int
+}
+
 // BlockingIterator represents an iterator that may
 // block indefinitely on its Next().
 type BlockingIterator[T any] interface {
@@ -30,14 +38,6 @@ type BlockingIterator[T any] interface {
 	// context is canceled, WaitForNext will stop
 	// blocking and None will be returned.
 	WaitForNext(ctx context.Context) optional.Option[T]
-}
-
-// Enumerable represents an iterator with a size.
-type Enumerable[T any] interface {
-	Iterator[T]
-
-	// Count returns the size of the iterator.
-	Count() int
 }
 
 // Slice represents an iterator on a generic slice.
